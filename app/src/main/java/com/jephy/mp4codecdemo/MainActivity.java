@@ -24,7 +24,7 @@ import static android.media.MediaFormat.KEY_MIME;
 
 public class MainActivity extends AppCompatActivity {
     private static final String SDCARD_PATH = Environment.getExternalStorageDirectory().getPath();
-    private static final String TEST_INPUT_FILE_PATH = SDCARD_PATH + "/CodecResource/test2.mp4";
+    private static final String TEST_INPUT_FILE_PATH = SDCARD_PATH + "/CodecResource/test3.mp4";
     private static final String TEST_OUTPUT_FILE_PATH = SDCARD_PATH + "/CodecResource/output.mp4";
 
     private static final String VIDEO_MEDIA_TYPE = "video/";//视频的轨道类型
@@ -91,27 +91,33 @@ public class MainActivity extends AppCompatActivity {
                                 long presentationTimeUs = mediaExtractor.getSampleTime();//pts以微秒计算
 
                                 int sampleSize = mediaExtractor.readSampleData(inputBuffer, 0);//读取样本数据并存放到inputBuffer中
+
                                 if (sampleSize < 0) {
                                    break;
                                 }
+                                byte[] bytes = new byte[inputBuffer.remaining()];
+                                inputBuffer.get(bytes);
+
+                                byte[] imuData = getIMUData(bytes);
+
+                                Log.d(TAG, "输入数据，inputBuffer.remaining = " + inputBuffer.remaining() + ", imuData = " + imuData);
+
+                                if (imuData == null) {
+                                    Log.d(TAG, "imu 未获取到.");
+                                } else {
+                                    Log.e(TAG, "imu 获取到.");
+                                }
+
+
 
                                 int inputBufferIndex = decoder.dequeueInputBuffer(sampleSize);
-                                Log.d(TAG,"inputBufferIndex = "+inputBufferIndex);
+
+                                Log.d(TAG,"inputBufferIndex = "+inputBufferIndex+", inputBuffer.remaining = "+inputBuffer.remaining());
 
                                 if (inputBufferIndex > 0) {
+
                                     ByteBuffer inputBuffer1 = decoder.getInputBuffer(inputBufferIndex);
                                     inputBuffer1.put(inputBuffer);
-                                    ByteBuffer imuData = getIMUData(inputBuffer);
-
-                                    Log.d(TAG, "imuData" + imuData);
-                                    if(imuData == null)
-                                    {
-                                        Log.d(MainActivity.class.getName(),"imu 未获取到.");
-                                    }else
-                                    {
-                                        Log.d(MainActivity.class.getName(),"imu 获取到.");
-                                    }
-
                                     decoder.queueInputBuffer(inputBufferIndex,0,sampleSize,presentationTimeUs,0);
                                 }
 
@@ -173,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
 
     public native String stringFromJNI();
 
-    public native ByteBuffer getIMUData(ByteBuffer packet);
+    public native byte[] getIMUData(byte[] packet);
 
     static {
         System.loadLibrary("native-lib");
