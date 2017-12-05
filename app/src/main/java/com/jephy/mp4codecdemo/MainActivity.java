@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
 //    private static final String TEST_INPUT_FILE_PATH = SDCARD_PATH + "/CodecResource/test3.mp4";
 //    private static final String TEST_OUTPUT_FILE_PATH = SDCARD_PATH + "/CodecResource/output.mp4";
 
-    private static final String TEST_INPUT_FILE_PATH = SDCARD_PATH + "/1/aa/d11.mp4";
+    private static final String TEST_INPUT_FILE_PATH = SDCARD_PATH + "/1/aa/d12.mp4";
     private static final String TEST_OUTPUT_FILE_PATH = SDCARD_PATH + "/1/aa/d3.mp4";
 
     private static final String VIDEO_MEDIA_TYPE = "video/";//视频的轨道类型
