@@ -55,6 +55,11 @@ public class MainActivity extends AppCompatActivity {
     public void startDecode(Button button) {
         Log.d(TAG, "点击开始解码");
 
+        syncDecode();
+
+    }
+
+    private void syncDecode() {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -126,7 +131,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }).start();
-
     }
 
     //获取指定类型媒体文件所在轨道
