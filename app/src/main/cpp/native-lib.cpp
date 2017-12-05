@@ -64,13 +64,13 @@ jbyteArray getIMUData(JNIEnv *env, jbyteArray array) {
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_jephy_mp4codecdemo_MainActivity_getIMUData(JNIEnv *env, jobject instance,
+Java_com_jephy_mp4codecdemo_VideoDecoder_getIMUData(JNIEnv *env, jobject instance,
                                                     jbyteArray packet) {
     return getIMUData(env, packet);
 }
 
 extern "C"
-jstring Java_com_jephy_mp4codecdemo_MainActivity_stringFromJNI(
+jstring Java_com_jephy_mp4codecdemo_VideoDecoder_stringFromJNI(
         JNIEnv *env,
         jobject /* this */) {
     std::string hello = "Hello from C++";
