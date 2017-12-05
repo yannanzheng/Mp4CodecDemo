@@ -1,5 +1,8 @@
 package com.jephy.mp4codecdemo;
 
+import android.media.MediaCodec;
+import android.media.MediaExtractor;
+import android.media.MediaFormat;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -11,14 +14,17 @@ import com.jephy.mp4codecdemo.util.PermissionUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+import static android.media.MediaFormat.KEY_MIME;
+
 public class MainActivity extends AppCompatActivity {
     private static final String SDCARD_PATH = Environment.getExternalStorageDirectory().getPath();
-    private static final String TEST_INPUT_FILE_PATH = SDCARD_PATH + "/CodecResource/test1.mp4";
+    private static final String TEST_INPUT_FILE_PATH = SDCARD_PATH + "/CodecResource/test2.mp4";
     private static final String TEST_OUTPUT_FILE_PATH = SDCARD_PATH + "/CodecResource/output.mp4";
 
     private static final String VIDEO_MEDIA_TYPE = "video/";//视频的轨道类型
@@ -26,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
     private static String TAG = "decode_test";
     @BindView(R.id.start_decode_bt)
     Button startDecodeButton;
+
+    private static int BYTE_BUFFER_LENGTH = 1024 * 1024;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,15 +60,82 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 if (isFileExists(TEST_INPUT_FILE_PATH)) {
                     Log.d(TAG, "mp4文件存在");
+                    MediaExtractor mediaExtractor = new MediaExtractor();
+                    try {
+                        mediaExtractor.setDataSource(TEST_INPUT_FILE_PATH);
+                        int mVideoTrackIndex = getMediaTrackIndex(mediaExtractor, VIDEO_MEDIA_TYPE);
+                        mediaExtractor.selectTrack(mVideoTrackIndex);
 
+                        Log.d(TAG, "mp4文件存在,mVideoTrackIndex = " + mVideoTrackIndex);
+                        if (mVideoTrackIndex >= 0) {
+                            MediaFormat mediaFormat = mediaExtractor.getTrackFormat(mVideoTrackIndex);
+                            int width = mediaFormat.getInteger(MediaFormat.KEY_WIDTH);
+                            int height = mediaFormat.getInteger(MediaFormat.KEY_HEIGHT);
+                            Log.d(TAG, "width = " + width + ", height = " + height);
+                            mediaExtractor.selectTrack(mVideoTrackIndex);
 
+                            MediaCodec codec = MediaCodec.createDecoderByType(mediaFormat.getString(MediaFormat.KEY_MIME));
+                            codec.configure(mediaFormat, null, null, 0);
+                            codec.start();
 
+                            ByteBuffer inputBuffer = ByteBuffer.allocate(BYTE_BUFFER_LENGTH);
+//                            int sampleSize = mediaExtractor.readSampleData(inputBuffer, 0);
+//                            boolean flag = sampleSize >= 0;
+                            while (true) {
+                                long presentationTimeUs = mediaExtractor.getSampleTime();//pts以微秒计算
 
+                                int sampleSize = mediaExtractor.readSampleData(inputBuffer, 0);
+                                if (sampleSize < 0) {
+                                   break;
+                                }
+
+                                int bufferIndex = codec.dequeueInputBuffer(sampleSize);
+//                                if (bufferIndex > 0) {
+//                                    ByteBuffer inputBuffer1 = codec.getInputBuffer(bufferIndex);
+//                                    codec.
+//                                }
+
+                                Log.d(TAG,"bufferIndex = "+bufferIndex);
+
+                                try {
+                                    Thread.sleep(33);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+
+                                Log.d(TAG, "presentationTimeUs = " + presentationTimeUs / 1000 + ", sampleSize = " + sampleSize);
+                                mediaExtractor.advance();
+                            }
+                            mediaExtractor.release();
+                            mediaExtractor = null;
+
+                            codec.stop();
+                            codec.release();
+                        }
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
 
                 }
             }
         }).start();
 
+    }
+
+    //获取指定类型媒体文件所在轨道
+    private int getMediaTrackIndex(MediaExtractor videoExtractor, String mediaType) {
+        int trackIndex = -1;
+        for (int i = 0; i < videoExtractor.getTrackCount(); i++) {
+            //获取视频所在轨道
+            MediaFormat mediaFormat = videoExtractor.getTrackFormat(i);
+            String mime = mediaFormat.getString(KEY_MIME);
+            if (mime.startsWith(mediaType)) {
+                trackIndex = i;
+                break;
+            }
+        }
+        return trackIndex;
     }
 
     private boolean isFileExists(String filePath) {
@@ -71,6 +146,8 @@ public class MainActivity extends AppCompatActivity {
         }
         return exists;
     }
+
+
 
 
 
