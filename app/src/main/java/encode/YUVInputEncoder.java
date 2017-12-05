@@ -6,6 +6,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.locks.ReentrantLock;
@@ -49,7 +50,7 @@ public class YUVInputEncoder {
 
     public int getBufferInfoIndex() {
         if (mMediaCodec != null) {
-            return mMediaCodec.dequeueInputBuffer(1200);
+            return mMediaCodec.dequeueInputBuffer(10);
         }
         return -1;
     }
@@ -66,9 +67,9 @@ public class YUVInputEncoder {
         return null;
     }
 
-    public void queueInputBufferInfo(int index, ByteBuffer buffer) {
+    public void queueInputBufferInfo(int index, ByteBuffer buffer, MediaCodec.BufferInfo bi) {
         if (mMediaCodec != null) {
-            mMediaCodec.queueInputBuffer(index, 0, buffer.capacity(), System.currentTimeMillis(), 0);
+            mMediaCodec.queueInputBuffer(index, 0, buffer.capacity(), bi.presentationTimeUs, 0);
         }
     }
 
@@ -86,8 +87,8 @@ public class YUVInputEncoder {
         mHandlerThread.quit();
         encodeLock.lock();
         try {
-            if(mMediaCodec != null) {
-                mMediaCodec.signalEndOfInputStream();
+            if (mMediaCodec != null) {
+                //mMediaCodec.signalEndOfInputStream();
             }
         } catch (IllegalStateException exception) {
             exception.printStackTrace();
@@ -123,8 +124,9 @@ public class YUVInputEncoder {
                 int outBufferIndex = mMediaCodec.dequeueOutputBuffer(bufferInfo, 12000);
                 if (outBufferIndex >= 0) {
                     ByteBuffer bb = outBuffers[outBufferIndex];
+                    Log.i("gsliu", "drainEncoder mListener != null : " + (mListener != null) + " mPause: " + mPause + "  bufferInfo: " + bufferInfo.presentationTimeUs);
                     if (mListener != null && !mPause) {
-                        mListener. onVideoEncode(bb, bufferInfo);
+                        mListener.onVideoEncode(bb, bufferInfo);
                     }
                     mMediaCodec.releaseOutputBuffer(outBufferIndex, false);
                 } else {

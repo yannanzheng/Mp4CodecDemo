@@ -1,6 +1,7 @@
 package encode;
 
 import android.media.MediaCodecInfo;
+import android.media.MediaFormat;
 
 /**
  * @Title: VideoConfiguration
@@ -14,7 +15,7 @@ import android.media.MediaCodecInfo;
 public final class VideoConfiguration {
     public static final int DEFAULT_HEIGHT = 640;
     public static final int DEFAULT_WIDTH = 360;
-    public static final int DEFAULT_FPS = 15;
+    public static final int DEFAULT_FPS = 30;
     public static final int DEFAULT_MAX_BPS = 1300;
     public static final int DEFAULT_MIN_BPS = 400;
     public static final int DEFAULT_IFI = 2;
@@ -26,7 +27,7 @@ public final class VideoConfiguration {
     public final int maxBps;
     public final int fps;
     public final int ifi;
-    public final String mime;
+    public String mime;
     public final int color_format;
 
     private VideoConfiguration(final Builder builder) {
@@ -52,6 +53,7 @@ public final class VideoConfiguration {
         private int fps = DEFAULT_FPS;
         private int ifi = DEFAULT_IFI;
         private String mime = DEFAULT_MIME;
+        private MediaFormat format;
         private int color_format = MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar;
 
         public Builder setSize(int width, int height) {
@@ -85,6 +87,7 @@ public final class VideoConfiguration {
             this.color_format = color_format;
             return this;
         }
+
 
         public VideoConfiguration build() {
             return new VideoConfiguration(this);

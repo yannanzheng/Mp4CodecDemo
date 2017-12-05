@@ -1,20 +1,22 @@
 package encode;
 
+import android.media.MediaCodec;
+import android.media.MediaFormat;
 import android.util.Log;
 
 import java.nio.ByteBuffer;
 
-public class YUVInputVideoController{
+public class YUVInputVideoController {
     private VideoConfiguration mVideoConfiguration = VideoConfiguration.createDefault();
     private YUVInputEncoder mEncoder;
     private OnVideoEncodeListener mListener;
+    public MediaFormat mMediaFormat;
+
+    public YUVInputVideoController(MediaFormat mMediaFormat) {
+        this.mMediaFormat = mMediaFormat;
+    }
 
     public void start() {
-//        mVideoConfiguration = new VideoConfiguration.Builder()
-//                .setSize(3040, 1520)
-//                .setColorFormat(MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible)
-//                .build();
-
         mEncoder = new YUVInputEncoder(mVideoConfiguration);
         mEncoder.start();
         mEncoder.setOnVideoEncodeListener(mListener);
@@ -36,14 +38,15 @@ public class YUVInputVideoController{
         return null;
     }
 
-    public void queueBufferInfo(int index, ByteBuffer buffer) {
+    public void queueBufferInfo(int index, ByteBuffer buffer, MediaCodec.BufferInfo bi) {
         if (mEncoder != null) {
-            mEncoder.queueInputBufferInfo(index, buffer);
+            mEncoder.queueInputBufferInfo(index, buffer,bi);
         }
     }
 
 
     public void stop() {
+        Log.d("gsliu","decodeCount[0] : stop");
         if (mEncoder != null) {
             mEncoder.setOnVideoEncodeListener(null);
             mEncoder.stop();
@@ -89,7 +92,7 @@ public class YUVInputVideoController{
         mVideoConfiguration = configuration;
     }
 
-    public void queueBufferInfo(ByteBuffer y, ByteBuffer u, ByteBuffer v, long width, long height) {
+    public void queueBufferInfo(ByteBuffer y, ByteBuffer u, ByteBuffer v, long width, long height, MediaCodec.BufferInfo bi) {
         int index = getEncoderInputBufferInfoIndex();
         if (index > 0) {
             ByteBuffer byteBuffer = getEncoderInputBufferInfo(index);
@@ -97,12 +100,12 @@ public class YUVInputVideoController{
                 byteBuffer.put(y);
                 byteBuffer.put(u);
                 byteBuffer.put(v);
-                queueBufferInfo(index, byteBuffer);
+                queueBufferInfo(index, byteBuffer,bi);
             }
         }
     }
 
-    public void queueBufferInfo(ByteBuffer yRef, ByteBuffer uvRef, long width, long height) {
+    public void queueBufferInfo(ByteBuffer yRef, ByteBuffer uvRef, long width, long height, MediaCodec.BufferInfo bi) {
         int index = getEncoderInputBufferInfoIndex();
         Log.e("xxx","index:"+index);
         if (index > 0) {
@@ -110,19 +113,19 @@ public class YUVInputVideoController{
             if (byteBuffer != null) {
                 byteBuffer.put(yRef);
                 byteBuffer.put(uvRef);
-                queueBufferInfo(index, byteBuffer);
+                queueBufferInfo(index, byteBuffer,bi);
             }
         }
     }
 
-    public void queueBufferInfo(ByteBuffer nv12Ref, long width, long height) {
+    public void queueBufferInfo(ByteBuffer nv12Ref, long width, long height, MediaCodec.BufferInfo bi) {
         int index = getEncoderInputBufferInfoIndex();
-        Log.e("xxx","index:"+index);
+        Log.i("gsliu","index:"+index);
         if (index > 0) {
             ByteBuffer byteBuffer = getEncoderInputBufferInfo(index);
             if (byteBuffer != null) {
                 byteBuffer.put(nv12Ref);
-                queueBufferInfo(index, byteBuffer);
+                queueBufferInfo(index, byteBuffer, bi);
             }
         }
     }

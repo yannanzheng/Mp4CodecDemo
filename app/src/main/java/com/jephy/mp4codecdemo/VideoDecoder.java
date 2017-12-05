@@ -102,11 +102,16 @@ public class VideoDecoder {
                                     ByteBuffer outputBuffer = decoder.getOutputBuffer(outputBufferIndex);
                                     Log.d("decode_output", "输出字节成功，bufferInfo = " + bufferInfo + ", outputBuffer.remaining() = " + outputBuffer.remaining() + ", pts = " + presentationTimeUs/1000);
                                     if (onFrameListener != null) {
-                                        onFrameListener.onFrame(outputBuffer,imuData);
+                                        onFrameListener.onFrame(outputBuffer,imuData, bufferInfo);
                                     }
                                     decoder.releaseOutputBuffer(outputBufferIndex,false);
                                 }
 
+                                try {
+                                    Thread.sleep(33);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
 
                                 Log.d(TAG, "bufferInfo = " + bufferInfo + "outputBufferIndex = " + outputBufferIndex);
 
@@ -120,6 +125,13 @@ public class VideoDecoder {
 
                             decoder.stop();
                             decoder.release();
+
+                            if (onDecodeCompleteListener != null) {
+                                onDecodeCompleteListener.onComplete();
+                            }
+
+
+
                         }
 
                     } catch (IOException e) {
@@ -158,6 +170,16 @@ public class VideoDecoder {
     private OnFrameListener onFrameListener;
 
     public interface OnFrameListener{
-        void onFrame(ByteBuffer byteBuffer, byte[] imuData);
+        void onFrame(ByteBuffer byteBuffer, byte[] imuData, MediaCodec.BufferInfo bufferInfo);
+    }
+
+    public void setOnDecodeCompleteListener(OnDecodeCompleteListener onDecodeCompleteListener) {
+        this.onDecodeCompleteListener = onDecodeCompleteListener;
+    }
+
+    private OnDecodeCompleteListener onDecodeCompleteListener;
+
+    public interface OnDecodeCompleteListener {
+        void onComplete();
     }
 }

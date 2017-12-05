@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
+import android.util.Log;
 
 /**
  * @Title: VideoMediaCodec
@@ -20,6 +21,7 @@ public class VideoMediaCodec {
     public static MediaCodec getVideoMediaCodec(VideoConfiguration videoConfiguration) {
         int videoWidth = getVideoSize(videoConfiguration.width);
         int videoHeight = getVideoSize(videoConfiguration.height);
+        Log.i("gsliu","videoWidth: "+videoWidth+" videoHeight ");
         MediaFormat format = MediaFormat.createVideoFormat(videoConfiguration.mime, videoWidth, videoHeight);
         format.setInteger(MediaFormat.KEY_COLOR_FORMAT, videoConfiguration.color_format);
         format.setInteger(MediaFormat.KEY_BIT_RATE, videoConfiguration.maxBps * 1024);
