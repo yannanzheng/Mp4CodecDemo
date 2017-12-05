@@ -79,33 +79,39 @@ public class MainActivity extends AppCompatActivity {
                             codec.start();
 
                             ByteBuffer inputBuffer = ByteBuffer.allocate(BYTE_BUFFER_LENGTH);
-//                            int sampleSize = mediaExtractor.readSampleData(inputBuffer, 0);
-//                            boolean flag = sampleSize >= 0;
                             while (true) {
                                 long presentationTimeUs = mediaExtractor.getSampleTime();//pts以微秒计算
 
-                                int sampleSize = mediaExtractor.readSampleData(inputBuffer, 0);
+                                int sampleSize = mediaExtractor.readSampleData(inputBuffer, 0);//读取样本数据并存放到inputBuffer中
                                 if (sampleSize < 0) {
                                    break;
                                 }
 
-                                int bufferIndex = codec.dequeueInputBuffer(sampleSize);
-//                                if (bufferIndex > 0) {
-//                                    ByteBuffer inputBuffer1 = codec.getInputBuffer(bufferIndex);
-//                                    codec.
-//                                }
+                                int inputBufferIndex = codec.dequeueInputBuffer(sampleSize);
+                                Log.d(TAG,"inputBufferIndex = "+inputBufferIndex);
 
-                                Log.d(TAG,"bufferIndex = "+bufferIndex);
+                                if (inputBufferIndex > 0) {
+                                    ByteBuffer inputBuffer1 = codec.getInputBuffer(inputBufferIndex);
+                                    inputBuffer1.put(inputBuffer);
 
-                                try {
-                                    Thread.sleep(33);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
+                                    codec.queueInputBuffer(inputBufferIndex,0,sampleSize,presentationTimeUs,0);
                                 }
+
+                                MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
+                                int outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo,presentationTimeUs);
+                                if (outputBufferIndex >= 0) {
+                                    ByteBuffer outputBuffer = codec.getOutputBuffer(outputBufferIndex);
+                                    Log.d("decode_output", "输出字节成功，bufferInfo = " + bufferInfo + ", outputBuffer.remaining() = " + outputBuffer.remaining() + ", pts = " + presentationTimeUs/1000);
+                                    codec.releaseOutputBuffer(outputBufferIndex,false);
+                                }
+
+                                Log.d(TAG, "bufferInfo = " + bufferInfo + "outputBufferIndex = " + outputBufferIndex);
 
                                 Log.d(TAG, "presentationTimeUs = " + presentationTimeUs / 1000 + ", sampleSize = " + sampleSize);
                                 mediaExtractor.advance();
                             }
+                            Log.d("decode_output","解码结束");
+
                             mediaExtractor.release();
                             mediaExtractor = null;
 
