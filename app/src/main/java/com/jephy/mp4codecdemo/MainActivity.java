@@ -49,6 +49,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        String string = stringFromJNI();
+        Log.d(TAG, "jni, string = "+string);
+
     }
 
     @OnClick(R.id.start_decode_bt)
@@ -79,9 +82,9 @@ public class MainActivity extends AppCompatActivity {
                             Log.d(TAG, "width = " + width + ", height = " + height);
                             mediaExtractor.selectTrack(mVideoTrackIndex);
 
-                            MediaCodec codec = MediaCodec.createDecoderByType(mediaFormat.getString(MediaFormat.KEY_MIME));
-                            codec.configure(mediaFormat, null, null, 0);
-                            codec.start();
+                            MediaCodec decoder = MediaCodec.createDecoderByType(mediaFormat.getString(MediaFormat.KEY_MIME));
+                            decoder.configure(mediaFormat, null, null, 0);
+                            decoder.start();
 
                             ByteBuffer inputBuffer = ByteBuffer.allocate(BYTE_BUFFER_LENGTH);
                             while (true) {
@@ -92,22 +95,41 @@ public class MainActivity extends AppCompatActivity {
                                    break;
                                 }
 
-                                int inputBufferIndex = codec.dequeueInputBuffer(sampleSize);
+                                int inputBufferIndex = decoder.dequeueInputBuffer(sampleSize);
                                 Log.d(TAG,"inputBufferIndex = "+inputBufferIndex);
 
                                 if (inputBufferIndex > 0) {
-                                    ByteBuffer inputBuffer1 = codec.getInputBuffer(inputBufferIndex);
+                                    ByteBuffer inputBuffer1 = decoder.getInputBuffer(inputBufferIndex);
                                     inputBuffer1.put(inputBuffer);
+                                    ByteBuffer imuData = getIMUData(inputBuffer);
 
-                                    codec.queueInputBuffer(inputBufferIndex,0,sampleSize,presentationTimeUs,0);
+                                    Log.d(TAG, "imuData" + imuData);
+                                    if(imuData == null)
+                                    {
+                                        Log.d(MainActivity.class.getName(),"imu 未获取到.");
+                                    }else
+                                    {
+                                        Log.d(MainActivity.class.getName(),"imu 获取到.");
+                                    }
+
+                                    decoder.queueInputBuffer(inputBufferIndex,0,sampleSize,presentationTimeUs,0);
                                 }
 
                                 MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
-                                int outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo,presentationTimeUs);
+                                int outputBufferIndex = decoder.dequeueOutputBuffer(bufferInfo,presentationTimeUs);
                                 if (outputBufferIndex >= 0) {
-                                    ByteBuffer outputBuffer = codec.getOutputBuffer(outputBufferIndex);
+                                    ByteBuffer outputBuffer = decoder.getOutputBuffer(outputBufferIndex);
                                     Log.d("decode_output", "输出字节成功，bufferInfo = " + bufferInfo + ", outputBuffer.remaining() = " + outputBuffer.remaining() + ", pts = " + presentationTimeUs/1000);
-                                    codec.releaseOutputBuffer(outputBufferIndex,false);
+//                                    ByteBuffer imuData = getIMUData(outputBuffer);
+//                                    Log.d(TAG, "imuData" + imuData);
+//                                    if(imuData == null)
+//                                    {
+//                                        Log.d(MainActivity.class.getName(),"imu 未获取到.");
+//                                    }else
+//                                    {
+//                                        Log.d(MainActivity.class.getName(),"imu 获取到.");
+//                                    }
+                                    decoder.releaseOutputBuffer(outputBufferIndex,false);
                                 }
 
                                 Log.d(TAG, "bufferInfo = " + bufferInfo + "outputBufferIndex = " + outputBufferIndex);
@@ -120,8 +142,8 @@ public class MainActivity extends AppCompatActivity {
                             mediaExtractor.release();
                             mediaExtractor = null;
 
-                            codec.stop();
-                            codec.release();
+                            decoder.stop();
+                            decoder.release();
                         }
 
                     } catch (IOException e) {
@@ -155,6 +177,14 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "文件不存在。。。。", Toast.LENGTH_SHORT).show();
         }
         return exists;
+    }
+
+    public native String stringFromJNI();
+
+    public native ByteBuffer getIMUData(ByteBuffer packet);
+
+    static {
+        System.loadLibrary("native-lib");
     }
 
 }
