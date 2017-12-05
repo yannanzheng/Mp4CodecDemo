@@ -120,15 +120,7 @@ public class MainActivity extends AppCompatActivity {
                                 if (outputBufferIndex >= 0) {
                                     ByteBuffer outputBuffer = decoder.getOutputBuffer(outputBufferIndex);
                                     Log.d("decode_output", "输出字节成功，bufferInfo = " + bufferInfo + ", outputBuffer.remaining() = " + outputBuffer.remaining() + ", pts = " + presentationTimeUs/1000);
-//                                    ByteBuffer imuData = getIMUData(outputBuffer);
-//                                    Log.d(TAG, "imuData" + imuData);
-//                                    if(imuData == null)
-//                                    {
-//                                        Log.d(MainActivity.class.getName(),"imu 未获取到.");
-//                                    }else
-//                                    {
-//                                        Log.d(MainActivity.class.getName(),"imu 获取到.");
-//                                    }
+
                                     decoder.releaseOutputBuffer(outputBufferIndex,false);
                                 }
 
